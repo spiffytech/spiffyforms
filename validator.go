@@ -1,7 +1,9 @@
 package validator
 
-import "errors"
-import "strconv"
+import (
+    "errors"
+    "strconv"
+)
 
 type Form struct {
     fields map[string]Field
@@ -26,6 +28,15 @@ func (form *Form) Validated() bool {
     }
 
     return true
+}
+func (form *Form) SetValues(submission map[string][]string) {
+    for name, field := range form.fields {
+        values, ok := submission[name]
+        if ok == false {
+            continue
+        }
+        field.SetValues(values)
+    }
 }
 
 type MultiError struct {

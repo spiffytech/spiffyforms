@@ -2,6 +2,7 @@ package validator
 
 import (
     "errors"
+    "net/url"
     "strconv"
     "testing"
 )
@@ -16,6 +17,85 @@ func TestEmptyForm(t *testing.T) {
     fields := form.Fields()
     if len(fields) != 0 {
         t.Error("Empty form contained fields")
+    }
+}
+
+
+func TestFormAddField(t *testing.T) {
+    t.Parallel()
+    field1 := NewBaseField("field")
+
+    form := NewForm()
+    form.AddField(&field1)
+    fields := form.Fields()
+    if len(fields) != 1 {
+        t.Fatal("Form should have 1 field, has " + strconv.Itoa(len(fields)))
+    }
+
+    // Test validating a form with a field with no validators
+    if form.Validated() == false {
+        t.Error("Form has no validators, should validate")
+    }
+
+    field2 := NewBaseField("field2")
+    field2.Require()
+    field2.SetValues([]string{"a"})
+    field2.AddValidator(func(value string) error {
+        if value != "a" {
+            return errors.New("Value is not 'a'")
+        }
+        return nil
+    })
+    form.AddField(&field2)
+
+    if form.Validated() == false {
+        t.Error("Form should validate")
+    }
+
+    field3 := NewBaseField("field3")
+    field3.Require()
+    field3.SetValues([]string{"b"})
+    field3.AddValidator(func(value string) error {
+        if value != "a" {
+            return errors.New("Value is not 'a'")
+        }
+        return nil
+    })
+    form.AddField(&field3)
+
+    if form.Validated() == true {
+        t.Error("Form with failing validator should not validate")
+    }
+}
+
+
+func TestFormSubmission(t *testing.T) {
+    form := NewForm()
+    field := NewBaseField("field")
+    field.Required()
+    field.AddValidator(func(value string) error {
+        if value != "a" {
+            return errors.New("Value != 'a'")
+        }
+        return nil
+    })
+
+    form.AddField(&field)
+
+    values := url.Values{}
+    values.Set("field", "a")
+    form.SetValues(values)
+    valid := form.Validated()
+    if valid == false {
+        t.Error("Form should validate")
+    }
+
+    // Test the opposite case, just to be sure the validators are being run
+    values.Set("field", "b")
+    form.SetValues(values)
+    valid = form.Validated()
+    if valid == true {
+        t.Error("Form shouldn't validate")
     }
 }
 
@@ -125,53 +205,5 @@ func TestRequiredField(t *testing.T) {
     err = field.Validate()
     if err != nil {
         t.Error("Required field with values should validate")
-    }
-}
-
-
-func TestFormAddField(t *testing.T) {
-    t.Parallel()
-    field1 := NewBaseField("field")
-
-    form := NewForm()
-    form.AddField(&field1)
-    fields := form.Fields()
-    if len(fields) != 1 {
-        t.Fatal("Form should have 1 field, has " + strconv.Itoa(len(fields)))
-    }
-
-    // Test validating a form with a field with no validators
-    if form.Validated() == false {
-        t.Error("Form has no validators, should validate")
-    }
-
-    field2 := NewBaseField("field2")
-    field2.Require()
-    field2.SetValues([]string{"a"})
-    field2.AddValidator(func(value string) error {
-        if value != "a" {
-            return errors.New("Value is not 'a'")
-        }
-        return nil
-    })
-    form.AddField(&field2)
-
-    if form.Validated() == false {
-        t.Error("Form should validate")
-    }
-
-    field3 := NewBaseField("field3")
-    field3.Require()
-    field3.SetValues([]string{"b"})
-    field3.AddValidator(func(value string) error {
-        if value != "a" {
-            return errors.New("Value is not 'a'")
-        }
-        return nil
-    })
-    form.AddField(&field3)
-
-    if form.Validated() == true {
-        t.Error("Form with failing validator should not validate")
     }
 }
