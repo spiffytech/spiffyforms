@@ -1,4 +1,11 @@
+
 package validator
+
+// Validators to add: 
+// - URL
+// - Min/max length
+// - In/not in set
+// - Int in/not in range
 
 import (
     "regexp"

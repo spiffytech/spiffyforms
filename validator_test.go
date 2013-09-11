@@ -10,7 +10,7 @@ import (
 func TestEmptyForm(t *testing.T) {
     t.Parallel()
     form := NewForm()
-    if form.Validated() != true {
+    if form.Validate() != true {
         t.Error("Empty form should validate")
     }
 
@@ -33,7 +33,7 @@ func TestFormAddField(t *testing.T) {
     }
 
     // Test validating a form with a field with no validators
-    if form.Validated() == false {
+    if form.Validate() == false {
         t.Error("Form has no validators, should validate")
     }
 
@@ -48,7 +48,7 @@ func TestFormAddField(t *testing.T) {
     })
     form.AddField(&field2)
 
-    if form.Validated() == false {
+    if form.Validate() == false {
         t.Error("Form should validate")
     }
 
@@ -63,7 +63,7 @@ func TestFormAddField(t *testing.T) {
     })
     form.AddField(&field3)
 
-    if form.Validated() == true {
+    if form.Validate() == true {
         t.Error("Form with failing validator should not validate")
     }
 }
@@ -85,7 +85,7 @@ func TestFormSubmission(t *testing.T) {
     values := url.Values{}
     values.Set("field", "a")
     form.SetValues(values)
-    valid := form.Validated()
+    valid := form.Validate()
     if valid == false {
         t.Error("Form should validate")
     }
@@ -93,7 +93,7 @@ func TestFormSubmission(t *testing.T) {
     // Test the opposite case, just to be sure the validators are being run
     values.Set("field", "b")
     form.SetValues(values)
-    valid = form.Validated()
+    valid = form.Validate()
     if valid == true {
         t.Error("Form shouldn't validate")
     }

@@ -20,15 +20,7 @@ func NewForm() Form {
 func (form *Form) Fields() map[string]Field {
     return form.fields
 }
-func (form *Form) Validated() bool {
-    for _, field := range form.fields {
-        if field.Validate() != nil {
-            return false
-        }
-    }
 
-    return true
-}
 func (form *Form) SetValues(submission map[string][]string) {
     for name, field := range form.fields {
         values, ok := submission[name]
@@ -76,6 +68,11 @@ type Field interface {
     SetValues([]string)
     Require()
     Required() bool
+}
+
+type HTMLField interface {
+    ErrorClass() string
+    ErrorHTML() string
 }
 
 func NewBaseField(name string) BaseField {
@@ -143,12 +140,15 @@ func (field *BaseField) Validate() error {
 
 
 func (form *Form) Validate() (ok bool) {
+    ok = true
     if len(form.fields) == 0 {
         return
     }
 
     for _, field := range form.fields {
-        field.Validate()
+        if field.Validate() != nil {
+            ok = false
+        }
     }
 
     return
