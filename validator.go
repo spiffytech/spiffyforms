@@ -54,6 +54,7 @@ func (me *MultiError) Errors() []error {
     return me.errors
 }
 
+// Signature for a validator. Accepts the HTML field's value, and returns an error if the field does not validate.
 type ValidationFunc func(string) error
 
 type Field interface {
@@ -75,12 +76,15 @@ type HTMLField interface {
     ErrorHTML() string
 }
 
+
+// Returns a new BaseField
 func NewBaseField(name string) BaseField {
     field := BaseField{}
     field.name = name
     return field
 }
 
+// Implements core HTML field logic. May be extended for specialized functionality.
 type BaseField struct {
     name string
     validators []ValidationFunc
@@ -88,18 +92,33 @@ type BaseField struct {
     values []string
     required bool
 }
+
+
+// Returns the field's name
 func (field *BaseField) Name() string {
     return field.name
 }
+
+
+// Add a validator to the field
 func (field *BaseField) AddValidator(f ValidationFunc) {
     field.validators = append(field.validators, f)
 }
+
+
+// Used to indicate the field didn't validate
 func (field *BaseField) AddError(err error) {
     field.errors = append(field.errors, err)
 }
+
+
+// Returns the field's values
 func (field *BaseField) Values() []string {
     return field.values
 }
+
+
+// Sets the submitted values for the field.
 func (field *BaseField) SetValues(values []string) {
     field.values = values
 }
@@ -112,15 +131,27 @@ func (field *BaseField) Errors() error {
     }
     return NewMultiError(field.errors)
 }
+
+
+// Mark the field as required
 func (field *BaseField) Require() {
     field.required = true
 }
+
+
+// Indicates whether the field is required to be filled in
 func (field *BaseField) Required() bool {
     return field.required
 }
+
+
+// Returns all validators associated with the field
 func (field *BaseField) Validators() []ValidationFunc {
     return field.validators
 }
+
+
+// Validate an individual form field
 func (field *BaseField) Validate() error {
     if field.Required() && len(field.Values()) == 0 {
         field.AddError(errors.New("Field is required"))
@@ -139,6 +170,7 @@ func (field *BaseField) Validate() error {
 }
 
 
+// Validates a form's fields. Returns true if all fields pass all validators.
 func (form *Form) Validate() (ok bool) {
     ok = true
     if len(form.fields) == 0 {
